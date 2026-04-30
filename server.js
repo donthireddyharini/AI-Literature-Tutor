@@ -9,11 +9,13 @@
  */
 
 require('dotenv').config();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // Bypass SSL certificate issues for local dev (Proxies/Antivirus)
 
 const express = require('express');
+const Groq = require('groq-sdk');
+const https = require('https');
 const cors = require('cors');
 const path = require('path');
-const https = require('https');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
 const passport = require('passport');
@@ -276,64 +278,59 @@ app.post('/api/chat', async (req, res) => {
 
   const groqMessages = [
     { role: 'system', content: SYSTEM_PROMPT },
-    ...processedMessages
+    ...processedMessages.slice(-10) // Limit context to last 10 messages to keep payload small
   ];
 
   const modelToUse = hasImageInChat ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
 
-  const payload = JSON.stringify({
-    model: modelToUse,
-    max_tokens: 1500,
-    temperature: 0.7,
-    messages: groqMessages
-  });
-
-  const options = {
-    hostname: 'api.groq.com',
-    port: 443,
-    path: '/openai/v1/chat/completions',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(payload),
-      'Authorization': `Bearer ${apiKey}`
-    }
-  };
-
-  const apiReq = https.request(options, (apiRes) => {
-    let data = '';
-    apiRes.on('data', chunk => { data += chunk; });
-    apiRes.on('end', () => {
-      try {
-        const parsed = JSON.parse(data);
-        if (parsed.error) {
-          console.error('Groq API error:', parsed.error);
-          return res.status(502).json({ error: parsed.error.message || 'Groq API error.' });
-        }
-        const reply = parsed.choices?.[0]?.message?.content;
-        if (!reply) return res.status(502).json({ error: 'Empty response from Groq API.' });
-
-        // Save assistant reply with sessionId
-        db.run('INSERT INTO messages (userId, sessionId, role, content) VALUES (?, ?, ?, ?)',
-          [req.user.id, sessionId || null, 'assistant', reply], (err) => {
-            if (err) console.error('Failed to save assistant message', err);
-          });
-
-        res.json({ reply });
-      } catch (e) {
-        console.error('Parse error:', e);
-        res.status(502).json({ error: 'Failed to parse Groq API response.' });
-      }
+  try {
+    const groq = new Groq({
+      apiKey: apiKey.trim(),
+      httpAgent: new https.Agent({ rejectUnauthorized: false })
     });
-  });
 
-  apiReq.on('error', (err) => {
-    console.error('Groq API request error:', err);
-    res.status(502).json({ error: 'Failed to connect to Groq API.' });
-  });
+    const chatCompletion = await groq.chat.completions.create({
+      messages: groqMessages,
+      model: modelToUse,
+      temperature: 0.7,
+      max_tokens: 1500,
+    });
 
-  apiReq.write(payload);
-  apiReq.end();
+    const reply = chatCompletion.choices?.[0]?.message?.content;
+    if (!reply) return res.status(502).json({ error: 'Empty response from Groq API.' });
+
+    // Save assistant reply with sessionId
+    db.run('INSERT INTO messages (userId, sessionId, role, content) VALUES (?, ?, ?, ?)',
+      [req.user.id, sessionId || null, 'assistant', reply], (err) => {
+        if (err) console.error('Failed to save assistant message', err);
+      });
+
+    res.json({ reply });
+
+  } catch (err) {
+    console.error('Groq API request error:', err.message);
+    
+    // Check if we got an HTML response back in the error data
+    const responseData = err.response ? (typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data)) : (err.message || '');
+    
+    if (responseData.includes('<!doctype html>') || responseData.includes('<html>')) {
+      const titleMatch = responseData.match(/<title>(.*?)<\/title>/i);
+      const h1Match = responseData.match(/<h1>(.*?)<\/h1>/i);
+      const htmlError = titleMatch ? titleMatch[1] : (h1Match ? h1Match[1] : 'Network Block Page');
+
+      return res.status(502).json({ 
+        error: `Groq API blocked by network: ${htmlError}`, 
+        details: err.message,
+        rawResponseSnippet: responseData.substring(0, 500) 
+      });
+    }
+
+    res.status(502).json({ 
+      error: 'Failed to connect to Groq API.', 
+      details: err.message,
+      code: err.code 
+    });
+  }
 });
 
 // ── Audio Transcription Endpoint (Optional) ──────────────

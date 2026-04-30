@@ -364,7 +364,11 @@ async function sendMsg() {
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `Server error: ${response.status}`);
+      const error = new Error(errData.error || `Server error: ${response.status}`);
+      error.details = errData.details;
+      error.code = errData.code;
+      error.rawResponseSnippet = errData.rawResponseSnippet;
+      throw error;
     }
 
     const data = await response.json();
@@ -376,9 +380,30 @@ async function sendMsg() {
     updateStats();
   } catch (err) {
     removeTyping();
-    appendMessage('ai', `⚠️ ${err.message}`);
-    const lastBubble = document.querySelector('.msg.ai:last-child .bubble');
-    if (lastBubble) lastBubble.classList.add('error-bubble');
+    const errorMessage = err.message || 'Unknown error';
+    appendMessage('ai', `⚠️ ${errorMessage}`);
+    
+    // Add specific error details if available
+    if (err.details || err.code || err.rawResponseSnippet) {
+      const detailMsg = document.createElement('div');
+      detailMsg.className = 'error-details';
+      detailMsg.style.fontSize = '0.8em';
+      detailMsg.style.marginTop = '4px';
+      detailMsg.style.opacity = '0.7';
+      detailMsg.style.wordBreak = 'break-all';
+      
+      let info = `${err.code || ''} ${err.details || ''}`.trim();
+      if (err.rawResponseSnippet) {
+        info += `\nRaw: ${err.rawResponseSnippet}`;
+      }
+      detailMsg.textContent = info;
+      
+      const lastBubble = document.querySelector('.msg.ai:last-child .bubble');
+      if (lastBubble) {
+        lastBubble.appendChild(detailMsg);
+        lastBubble.classList.add('error-bubble');
+      }
+    }
   } finally {
     setLoading(false);
     scrollToBottom();
