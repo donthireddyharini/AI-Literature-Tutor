@@ -281,7 +281,7 @@ app.post('/api/chat', async (req, res) => {
     ...processedMessages.slice(-10) // Limit context to last 10 messages to keep payload small
   ];
 
-  const modelToUse = hasImageInChat ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
+  const modelToUse = 'qwen/qwen3.8-27b';
 
   try {
     const groq = new Groq({
