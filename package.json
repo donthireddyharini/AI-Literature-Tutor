@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "npm rebuild sqlite3"
   },
   "keywords": [
     "literature",
@@ -33,6 +34,6 @@
     "nodemon": "^3.0.2"
   },
   "engines": {
-    "node": "20.x"
+    "node": "18.x"
   }
 }
