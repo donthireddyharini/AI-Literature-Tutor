@@ -1,4 +1,4 @@
-# ?? LitMind — AI Literature Tutor
+# ?? LitMind â€” AI Literature Tutor
 
 An elegant, AI-powered literature tutoring web app built with Node.js, Express, Google OAuth, SQLite, and the Groq API (using Qwen models).
 
@@ -6,14 +6,14 @@ An elegant, AI-powered literature tutoring web app built with Node.js, Express, 
 
 ## ? Features
 
-- Deep literary analysis — themes, symbolism, narrative technique, character studies
+- Deep literary analysis â€” themes, symbolism, narrative technique, character studies
 - Full conversation memory within a session (SQLite)
 - User Authentication via Google OAuth and "Demo Login"
 - Multimodal support - chat with both text and images
 - Markdown-rendered AI responses (headers, bold, italics, blockquotes)
-- Beautiful editorial design — warm parchment aesthetic, Playfair Display typography
+- Beautiful editorial design â€” warm parchment aesthetic, Playfair Display typography
 - Fully responsive for desktop and mobile
-- Secure API key handling (backend proxy — key never exposed to browser)
+- Secure API key handling (backend proxy â€” key never exposed to browser)
 
 ---
 
@@ -22,9 +22,9 @@ An elegant, AI-powered literature tutoring web app built with Node.js, Express, 
 ```
 litmind/
 +-- public/
-¦   +-- index.html     ? Main HTML page
-¦   +-- style.css      ? All styles
-¦   +-- app.js         ? Frontend JavaScript
+Â¦   +-- index.html     ? Main HTML page
+Â¦   +-- style.css      ? All styles
+Â¦   +-- app.js         ? Frontend JavaScript
 +-- server.js          ? Express backend + Auth & Groq API integration
 +-- db.js              ? SQLite Database initialization
 +-- package.json
@@ -36,7 +36,7 @@ litmind/
 
 ## ?? How to Run Locally
 
-### Step 1 — Prerequisites
+### Step 1 â€” Prerequisites
 
 Make sure you have **Node.js v20+** installed:
 ```bash
@@ -46,7 +46,7 @@ If not installed, download from https://nodejs.org
 
 ---
 
-### Step 2 — Get Your API Keys
+### Step 2 â€” Get Your API Keys
 
 **1. Groq API Key (AI Chat)**
 1. Go to https://console.groq.com/keys
@@ -61,7 +61,7 @@ If not installed, download from https://nodejs.org
 
 ---
 
-### Step 3 — Set Up the Project
+### Step 3 â€” Set Up the Project
 
 ```bash
 # 1. Enter the project folder
@@ -84,12 +84,12 @@ GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxxxxxx
 
 ---
 
-### Step 4 — Run the App
+### Step 4 â€” Run the App
 
 ```bash
 npm start
 ```
-Open your browser at **http://localhost:3000** and start chatting!
+Open your browser at ** https://ai-literature-tutor.onrender.com** and start chatting!
 
 ---
 
@@ -110,7 +110,7 @@ This app is optimized for deployment on [Render](https://render.com).
    - `GOOGLE_CLIENT_SECRET`
 6. Click **Deploy**
 7. **Important:** Add your new Render URL to your Google Cloud Console **Authorized redirect URIs** (e.g., `https://ai-literature-tutor.onrender.com/auth/google/callback`).
-
+APP LINK:  https://ai-literature-tutor.onrender.com
 ---
 
 ## ?? Customization
@@ -124,5 +124,5 @@ This app is optimized for deployment on [Render](https://render.com).
 
 ## ?? License
 
-MIT — free to use, modify, and deploy.
+MIT â€” free to use, modify, and deploy.
 
